@@ -1,0 +1,18 @@
+import { apiRequest } from '@/lib/api-client';
+import type { CreateMessageInput, Message } from './types';
+
+export function getMessages(): Promise<Message[]> {
+  return apiRequest<Message[]>('/messages');
+}
+
+export async function getMessage(messageId: string): Promise<Message | null> {
+  const messages = await getMessages();
+  return messages.find((message) => message.id === Number(messageId)) ?? null;
+}
+
+export function createMessage(input: CreateMessageInput): Promise<Message> {
+  return apiRequest<Message>('/messages', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}

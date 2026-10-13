@@ -1,4 +1,5 @@
 import { CreateDateColumn, Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import type { MessageCategory } from './message-category.js';
 
 @Entity('messages')
 export class Message {
@@ -9,14 +10,15 @@ export class Message {
   customerMessage: string;
 
   @Column({
+    type: 'varchar',
     nullable: true,
   })
-  category: string;
+  category: MessageCategory | null;
 
   @Column("text", {
     nullable: true,
   })
-  generatedReply: string;
+  generatedReply: string | null;
 
   @Column({
     default: false,

@@ -1,0 +1,79 @@
+import { BadRequestException } from '@nestjs/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Repository } from 'typeorm';
+import { GeminiService } from '../ai/gemini.service.js';
+import { Message } from './message.entity.js';
+import { MessagesService } from './messages.service.js';
+
+describe('MessagesService', () => {
+  let messagesRepository: Repository<Message>;
+  let geminiService: GeminiService;
+  let messagesService: MessagesService;
+  let createMessageRecord: ReturnType<typeof vi.fn>;
+  let saveMessageRecord: ReturnType<typeof vi.fn>;
+  let generateMessageContent: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    createMessageRecord = vi.fn();
+    saveMessageRecord = vi.fn();
+    generateMessageContent = vi.fn();
+    messagesRepository = {
+      create: createMessageRecord,
+      save: saveMessageRecord,
+    } as unknown as Repository<Message>;
+    geminiService = {
+      generateMessageContent,
+    } as unknown as GeminiService;
+    messagesService = new MessagesService(messagesRepository, geminiService);
+  });
+
+  it('generates and saves a classified reply for the customer message', async () => {
+    const generatedContent = {
+      category: 'complaint' as const,
+      generatedReply: 'We are sorry about this experience.',
+    };
+    const savedMessage = {
+      id: 1,
+      customerMessage: 'The order arrived late.',
+      ...generatedContent,
+      approved: false,
+    } as Message;
+
+    generateMessageContent.mockResolvedValue(generatedContent);
+    createMessageRecord.mockReturnValue(savedMessage);
+    saveMessageRecord.mockResolvedValue(savedMessage);
+
+    await expect(
+      messagesService.create({ customerMessage: '  The order arrived late.  ' }),
+    ).resolves.toBe(savedMessage);
+
+    expect(generateMessageContent).toHaveBeenCalledWith(
+      'The order arrived late.',
+    );
+    expect(createMessageRecord).toHaveBeenCalledWith({
+      customerMessage: 'The order arrived late.',
+      ...generatedContent,
+      approved: false,
+    });
+    expect(saveMessageRecord).toHaveBeenCalledWith(savedMessage);
+  });
+
+  it('rejects blank customer messages without calling Gemini', async () => {
+    await expect(
+      messagesService.create({ customerMessage: '   ' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(generateMessageContent).not.toHaveBeenCalled();
+    expect(saveMessageRecord).not.toHaveBeenCalled();
+  });
+
+  it('does not save the message when AI generation fails', async () => {
+    generateMessageContent.mockRejectedValue(new Error('Provider unavailable'));
+
+    await expect(
+      messagesService.create({ customerMessage: 'Where is my order?' }),
+    ).rejects.toThrow('Provider unavailable');
+
+    expect(saveMessageRecord).not.toHaveBeenCalled();
+  });
+});

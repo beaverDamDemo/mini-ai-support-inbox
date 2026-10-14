@@ -22,6 +22,7 @@ export function MessageComposer() {
       const message = await createMessage({
         customerMessage: customerMessage.trim(),
       });
+      setCustomerMessage('');
       router.push(`/messages/${message.id}`);
     } catch (requestError: unknown) {
       setError(
@@ -29,6 +30,7 @@ export function MessageComposer() {
           ? requestError.message
           : 'Could not save this message.',
       );
+    } finally {
       setSubmitting(false);
     }
   }
@@ -62,7 +64,7 @@ export function MessageComposer() {
             className="min-h-48 w-full resize-y rounded-md border border-[#cbd7cf] bg-white px-3 py-2.5 text-sm leading-6 outline-none focus:border-[#39785b] focus:ring-2 focus:ring-[#39785b]/20"
             id="customer-message"
             maxLength={10000}
-            onChange={(event) => setCustomerMessage(event.target.value)}
+            onInput={(event) => setCustomerMessage(event.currentTarget.value)}
             placeholder="Paste the customer's message"
             required
             value={customerMessage}

@@ -19,7 +19,26 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     const responseBody = await response.text();
-    throw new Error(responseBody || `Request failed (${response.status})`);
+    let message = responseBody || `Request failed (${response.status})`;
+
+    try {
+      const errorBody: unknown = JSON.parse(responseBody);
+      if (typeof errorBody === 'object' && errorBody !== null) {
+        const serverMessage = (errorBody as { message?: unknown; }).message;
+        if (typeof serverMessage === 'string' && serverMessage.trim()) {
+          message = serverMessage;
+        } else if (
+          Array.isArray(serverMessage) &&
+          serverMessage.every((item) => typeof item === 'string')
+        ) {
+          message = serverMessage.join(' ');
+        }
+      }
+    } catch {
+      // Keep the raw response text when the server did not return JSON.
+    }
+
+    throw new Error(message);
   }
 
   return (await response.json()) as T;

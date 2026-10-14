@@ -7,7 +7,7 @@ export default function MessagePage({
   return (
     <Suspense
       fallback={
-        <p className="py-8 text-sm text-[#65736b]" role="status">
+        <p className="py-8 text-sm text-muted" role="status">
           Loading message...
         </p>
       }

@@ -7,8 +7,8 @@ type PageHeadingProps = {
 
 export function PageHeading({ title, action }: PageHeadingProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight text-[#202a24]">
+    <div className="page-heading">
+      <h1 className="text-2xl font-semibold leading-tight text-foreground">
         {title}
       </h1>
       {action}

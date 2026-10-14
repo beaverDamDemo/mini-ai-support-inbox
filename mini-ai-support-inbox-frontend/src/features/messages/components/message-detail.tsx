@@ -46,30 +46,25 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
       <PageHeading
         title={`Message #${messageId}`}
         action={
-          <Link
-            className="text-sm font-medium text-[#4d5d53] underline underline-offset-4 hover:text-[#202a24]"
-            href="/"
-          >
+          <Link className="gh-link text-sm" href="/">
             Back to inbox
           </Link>
         }
       />
 
       {loading ? (
-        <p className="py-8 text-sm text-[#65736b]" role="status">
+        <p className="py-8 text-sm text-muted" role="status">
           Loading message...
         </p>
       ) : error ? (
         <p
-          className="rounded-md border border-[#e4c7c3] bg-white p-5 text-sm text-[#8b3830]"
+          className="gh-panel border-danger-foreground/20 p-5 text-sm text-danger-foreground"
           role="alert"
         >
           {error}
         </p>
       ) : !message ? (
-        <p className="rounded-md border border-[#dce5df] bg-white p-5 text-sm text-[#65736b]">
-          Message not found.
-        </p>
+        <p className="gh-panel p-5 text-sm text-muted">Message not found.</p>
       ) : (
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -77,10 +72,7 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
               approved={message.approved}
               category={message.category}
             />
-            <time
-              className="text-sm text-[#65736b]"
-              dateTime={message.createdAt}
-            >
+            <time className="text-sm text-muted" dateTime={message.createdAt}>
               {new Intl.DateTimeFormat('en', {
                 dateStyle: 'medium',
                 timeStyle: 'short',
@@ -88,25 +80,23 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
             </time>
           </div>
 
-          <article className="space-y-3 rounded-md border border-[#dce5df] bg-white p-5 sm:p-7">
-            <h2 className="text-sm font-semibold text-[#4d5d53]">
+          <article className="gh-panel space-y-3 p-5 sm:p-7">
+            <h2 className="text-sm font-semibold text-muted">
               Customer message
             </h2>
-            <p className="whitespace-pre-wrap text-sm leading-7 text-[#202a24]">
+            <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">
               {message.customerMessage}
             </p>
           </article>
 
-          <article className="space-y-3 rounded-md border border-[#dce5df] bg-white p-5 sm:p-7">
-            <h2 className="text-sm font-semibold text-[#4d5d53]">
-              Response draft
-            </h2>
+          <article className="gh-panel space-y-3 p-5 sm:p-7">
+            <h2 className="text-sm font-semibold text-muted">Response draft</h2>
             {message.generatedReply ? (
-              <p className="whitespace-pre-wrap text-sm leading-7 text-[#202a24]">
+              <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">
                 {message.generatedReply}
               </p>
             ) : (
-              <p className="text-sm text-[#65736b]">No response draft yet.</p>
+              <p className="text-sm text-muted">No response draft yet.</p>
             )}
           </article>
         </div>

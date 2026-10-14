@@ -26,3 +26,9 @@ export function updateMessageReply(
     body: JSON.stringify({ generatedReply }),
   });
 }
+
+export function approveMessageReply(messageId: string): Promise<Message> {
+  return apiRequest<Message>(`/messages/${messageId}/approve`, {
+    method: 'PATCH',
+  });
+}

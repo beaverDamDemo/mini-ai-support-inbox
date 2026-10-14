@@ -4,7 +4,7 @@ import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { PageHeading } from '@/components/ui/page-heading';
-import { getMessage, updateMessageReply } from '../api';
+import { approveMessageReply, getMessage, updateMessageReply } from '../api';
 import type { Message } from '../types';
 import { MessageStatusPill } from './message-status-pill';
 
@@ -72,6 +72,24 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
     }
   }
 
+  async function handleApproveReply() {
+    setSavingReply(true);
+    setReplyError(null);
+
+    try {
+      const updatedMessage = await approveMessageReply(messageId);
+      setMessage(updatedMessage);
+    } catch (requestError: unknown) {
+      setReplyError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Could not approve this response.',
+      );
+    } finally {
+      setSavingReply(false);
+    }
+  }
+
   return (
     <section className="mx-auto max-w-3xl space-y-6">
       <PageHeading
@@ -126,15 +144,37 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
                 Response draft
               </h2>
               {!editingReply ? (
-                <button
-                  className="gh-button gh-button-secondary"
-                  onClick={startEditingReply}
-                  type="button"
-                >
-                  Edit response
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  {!message.approved && message.generatedReply?.trim() ? (
+                    <button
+                      className="gh-button gh-button-primary"
+                      disabled={savingReply}
+                      onClick={handleApproveReply}
+                      type="button"
+                    >
+                      {savingReply ? 'Approving...' : 'Approve response'}
+                    </button>
+                  ) : null}
+                  <button
+                    className="gh-button gh-button-secondary"
+                    disabled={savingReply}
+                    onClick={startEditingReply}
+                    type="button"
+                  >
+                    Edit response
+                  </button>
+                </div>
               ) : null}
             </div>
+
+            {replyError ? (
+              <p
+                className="rounded-md border border-danger-foreground/20 bg-danger-background px-3 py-2 text-sm text-danger-foreground"
+                role="alert"
+              >
+                {replyError}
+              </p>
+            ) : null}
 
             {editingReply ? (
               <form className="space-y-4" onSubmit={handleSaveReply}>
@@ -163,15 +203,6 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
                     {replyDraft.length}/10,000
                   </p>
                 </div>
-
-                {replyError ? (
-                  <p
-                    className="rounded-md border border-danger-foreground/20 bg-danger-background px-3 py-2 text-sm text-danger-foreground"
-                    role="alert"
-                  >
-                    {replyError}
-                  </p>
-                ) : null}
 
                 <div className="flex flex-wrap justify-end gap-3">
                   <button

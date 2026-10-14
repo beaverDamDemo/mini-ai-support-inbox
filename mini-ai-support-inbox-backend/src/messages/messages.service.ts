@@ -63,6 +63,22 @@ export class MessagesService {
     }
 
     message.generatedReply = generatedReply;
+    message.approved = false;
+    return this.messagesRepository.save(message);
+  }
+
+  async approveReply(id: number): Promise<Message> {
+    const message = await this.messagesRepository.findOneBy({ id });
+    if (!message) {
+      throw new NotFoundException(`Message ${id} was not found.`);
+    }
+    if (!message.generatedReply?.trim()) {
+      throw new BadRequestException(
+        'A response must be written before it can be approved.',
+      );
+    }
+
+    message.approved = true;
     return this.messagesRepository.save(message);
   }
 }

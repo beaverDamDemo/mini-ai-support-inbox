@@ -80,13 +80,13 @@ describe('MessagesService', () => {
     expect(saveMessageRecord).not.toHaveBeenCalled();
   });
 
-  it('updates and saves only the response draft', async () => {
+  it('updates the response draft and resets its approval', async () => {
     const message = {
       id: 1,
       customerMessage: 'Where is my order?',
       category: 'inquiry',
       generatedReply: 'The order is on its way.',
-      approved: false,
+      approved: true,
     } as Message;
     findMessageById.mockResolvedValue(message);
     saveMessageRecord.mockResolvedValue(message);
@@ -118,6 +118,46 @@ describe('MessagesService', () => {
     await expect(
       messagesService.updateReply(42, { generatedReply: 'Updated reply.' }),
     ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(saveMessageRecord).not.toHaveBeenCalled();
+  });
+
+  it('approves and saves a non-empty response', async () => {
+    const message = {
+      id: 1,
+      customerMessage: 'Where is my order?',
+      generatedReply: 'Your order is on its way.',
+      approved: false,
+    } as Message;
+    findMessageById.mockResolvedValue(message);
+    saveMessageRecord.mockResolvedValue(message);
+
+    await expect(messagesService.approveReply(1)).resolves.toBe(message);
+
+    expect(message.approved).toBe(true);
+    expect(saveMessageRecord).toHaveBeenCalledWith(message);
+  });
+
+  it('rejects approval when no response draft exists', async () => {
+    findMessageById.mockResolvedValue({
+      id: 1,
+      generatedReply: null,
+      approved: false,
+    } as Message);
+
+    await expect(messagesService.approveReply(1)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+
+    expect(saveMessageRecord).not.toHaveBeenCalled();
+  });
+
+  it('returns not found when approving a missing message', async () => {
+    findMessageById.mockResolvedValue(null);
+
+    await expect(messagesService.approveReply(42)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
 
     expect(saveMessageRecord).not.toHaveBeenCalled();
   });

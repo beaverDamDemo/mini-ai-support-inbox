@@ -25,6 +25,11 @@ export class MessagesController {
     return this.messagesService.create(createMessageDto);
   }
 
+  @Patch(':id/approve')
+  approveReply(@Param('id', ParseIntPipe) id: number) {
+    return this.messagesService.approveReply(id);
+  }
+
   @Patch(':id')
   updateReply(
     @Param('id', ParseIntPipe) id: number,

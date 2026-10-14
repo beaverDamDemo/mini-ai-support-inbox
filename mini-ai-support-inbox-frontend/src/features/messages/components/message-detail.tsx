@@ -1,7 +1,6 @@
 'use client';
 
 import type { FormEvent } from 'react';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { PageHeading } from '@/components/ui/page-heading';
 import { approveMessageReply, getMessage, updateMessageReply } from '../api';
@@ -92,14 +91,7 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
-      <PageHeading
-        title={`Message #${messageId}`}
-        action={
-          <Link className="gh-link text-sm" href="/">
-            Back to inbox
-          </Link>
-        }
-      />
+      <PageHeading title={`Message #${messageId}`} />
 
       {loading ? (
         <p className="py-8 text-sm text-muted" role="status">

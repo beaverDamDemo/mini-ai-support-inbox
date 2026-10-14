@@ -40,17 +40,7 @@ export function MessageInbox() {
 
   return (
     <section className="space-y-6">
-      <PageHeading
-        title="Inbox"
-        action={
-          <Link
-            className="rounded-md bg-[#245a44] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#194832]"
-            href="/messages/new"
-          >
-            New message
-          </Link>
-        }
-      />
+      <PageHeading title="Inbox" />
 
       {loading ? (
         <p className="py-10 text-center text-sm text-[#65736b]" role="status">
@@ -77,12 +67,6 @@ export function MessageInbox() {
       ) : messages.length === 0 ? (
         <div className="rounded-md border border-dashed border-[#cbd7cf] bg-white px-6 py-16 text-center">
           <p className="font-medium text-[#202a24]">No messages yet</p>
-          <Link
-            className="mt-4 inline-flex rounded-md border border-[#cbd7cf] px-3 py-2 text-sm font-medium text-[#245a44] hover:bg-[#f3f6f4]"
-            href="/messages/new"
-          >
-            Add a message
-          </Link>
         </div>
       ) : (
         <ul className="divide-y divide-[#e6ebe7] overflow-hidden rounded-md border border-[#dce5df] bg-white">

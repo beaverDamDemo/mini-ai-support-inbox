@@ -37,17 +37,7 @@ export function MessageComposer() {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
-      <PageHeading
-        title="New message"
-        action={
-          <Link
-            className="text-sm font-medium text-[#4d5d53] underline underline-offset-4 hover:text-[#202a24]"
-            href="/"
-          >
-            Back to inbox
-          </Link>
-        }
-      />
+      <PageHeading title="New message" />
 
       <form
         className="space-y-5 rounded-md border border-[#dce5df] bg-white p-5 sm:p-7"

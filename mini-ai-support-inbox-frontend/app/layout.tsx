@@ -38,12 +38,6 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
               className="flex items-center gap-2"
             >
               <Link
-                className="rounded-md px-3 py-2 text-sm text-[#4d5d53] hover:bg-[#f1f5f2]"
-                href="/"
-              >
-                Inbox
-              </Link>
-              <Link
                 className="rounded-md bg-[#245a44] px-3 py-2 text-sm font-medium text-white hover:bg-[#194832]"
                 href="/messages/new"
               >

@@ -1,9 +1,10 @@
 'use client';
 
+import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { PageHeading } from '@/components/ui/page-heading';
-import { getMessage } from '../api';
+import { getMessage, updateMessageReply } from '../api';
 import type { Message } from '../types';
 import { MessageStatusPill } from './message-status-pill';
 
@@ -15,6 +16,10 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
   const [message, setMessage] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingReply, setEditingReply] = useState(false);
+  const [replyDraft, setReplyDraft] = useState('');
+  const [savingReply, setSavingReply] = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -40,6 +45,32 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
       isCurrent = false;
     };
   }, [messageId]);
+
+  function startEditingReply() {
+    setReplyDraft(message?.generatedReply ?? '');
+    setReplyError(null);
+    setEditingReply(true);
+  }
+
+  async function handleSaveReply(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingReply(true);
+    setReplyError(null);
+
+    try {
+      const updatedMessage = await updateMessageReply(messageId, replyDraft);
+      setMessage(updatedMessage);
+      setEditingReply(false);
+    } catch (requestError: unknown) {
+      setReplyError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Could not save this response.',
+      );
+    } finally {
+      setSavingReply(false);
+    }
+  }
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
@@ -90,8 +121,77 @@ export function MessageDetail({ messageId }: MessageDetailProps) {
           </article>
 
           <article className="gh-panel space-y-3 p-5 sm:p-7">
-            <h2 className="text-sm font-semibold text-muted">Response draft</h2>
-            {message.generatedReply ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-muted">
+                Response draft
+              </h2>
+              {!editingReply ? (
+                <button
+                  className="gh-button gh-button-secondary"
+                  onClick={startEditingReply}
+                  type="button"
+                >
+                  Edit response
+                </button>
+              ) : null}
+            </div>
+
+            {editingReply ? (
+              <form className="space-y-4" onSubmit={handleSaveReply}>
+                <div className="space-y-2">
+                  <label
+                    className="block text-sm font-semibold text-foreground"
+                    htmlFor="response-draft"
+                  >
+                    Response
+                  </label>
+                  <textarea
+                    aria-describedby="response-draft-count"
+                    className="gh-textarea w-full resize-y text-sm"
+                    id="response-draft"
+                    maxLength={10000}
+                    onInput={(event) =>
+                      setReplyDraft(event.currentTarget.value)
+                    }
+                    required
+                    value={replyDraft}
+                  />
+                  <p
+                    className="text-right text-xs text-muted"
+                    id="response-draft-count"
+                  >
+                    {replyDraft.length}/10,000
+                  </p>
+                </div>
+
+                {replyError ? (
+                  <p
+                    className="rounded-md border border-danger-foreground/20 bg-danger-background px-3 py-2 text-sm text-danger-foreground"
+                    role="alert"
+                  >
+                    {replyError}
+                  </p>
+                ) : null}
+
+                <div className="flex flex-wrap justify-end gap-3">
+                  <button
+                    className="gh-button gh-button-secondary"
+                    disabled={savingReply}
+                    onClick={() => setEditingReply(false)}
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="gh-button gh-button-primary"
+                    disabled={savingReply || replyDraft.trim().length === 0}
+                    type="submit"
+                  >
+                    {savingReply ? 'Saving...' : 'Save response'}
+                  </button>
+                </div>
+              </form>
+            ) : message.generatedReply ? (
               <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">
                 {message.generatedReply}
               </p>

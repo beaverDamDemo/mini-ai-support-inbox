@@ -16,3 +16,13 @@ export function createMessage(input: CreateMessageInput): Promise<Message> {
     body: JSON.stringify(input),
   });
 }
+
+export function updateMessageReply(
+  messageId: string,
+  generatedReply: string,
+): Promise<Message> {
+  return apiRequest<Message>(`/messages/${messageId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ generatedReply }),
+  });
+}

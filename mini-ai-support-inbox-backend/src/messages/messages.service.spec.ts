@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Repository } from 'typeorm';
 import { GeminiService } from '../ai/gemini.service.js';
@@ -11,15 +11,18 @@ describe('MessagesService', () => {
   let messagesService: MessagesService;
   let createMessageRecord: ReturnType<typeof vi.fn>;
   let saveMessageRecord: ReturnType<typeof vi.fn>;
+  let findMessageById: ReturnType<typeof vi.fn>;
   let generateMessageContent: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     createMessageRecord = vi.fn();
     saveMessageRecord = vi.fn();
+    findMessageById = vi.fn();
     generateMessageContent = vi.fn();
     messagesRepository = {
       create: createMessageRecord,
       save: saveMessageRecord,
+      findOneBy: findMessageById,
     } as unknown as Repository<Message>;
     geminiService = {
       generateMessageContent,
@@ -73,6 +76,48 @@ describe('MessagesService', () => {
     await expect(
       messagesService.create({ customerMessage: 'Where is my order?' }),
     ).rejects.toThrow('Provider unavailable');
+
+    expect(saveMessageRecord).not.toHaveBeenCalled();
+  });
+
+  it('updates and saves only the response draft', async () => {
+    const message = {
+      id: 1,
+      customerMessage: 'Where is my order?',
+      category: 'inquiry',
+      generatedReply: 'The order is on its way.',
+      approved: false,
+    } as Message;
+    findMessageById.mockResolvedValue(message);
+    saveMessageRecord.mockResolvedValue(message);
+
+    await expect(
+      messagesService.updateReply(1, {
+        generatedReply: '  Your order is on its way.  ',
+      }),
+    ).resolves.toBe(message);
+
+    expect(message.generatedReply).toBe('Your order is on its way.');
+    expect(message.customerMessage).toBe('Where is my order?');
+    expect(message.category).toBe('inquiry');
+    expect(message.approved).toBe(false);
+    expect(saveMessageRecord).toHaveBeenCalledWith(message);
+  });
+
+  it('rejects blank response drafts', async () => {
+    await expect(
+      messagesService.updateReply(1, { generatedReply: '   ' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(findMessageById).not.toHaveBeenCalled();
+  });
+
+  it('returns not found when editing a missing message', async () => {
+    findMessageById.mockResolvedValue(null);
+
+    await expect(
+      messagesService.updateReply(42, { generatedReply: 'Updated reply.' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
 
     expect(saveMessageRecord).not.toHaveBeenCalled();
   });
